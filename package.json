@@ -1,0 +1,12 @@
+{
+  "name": "comedor-unpa",
+  "version": "1.0.0",
+  "scripts": {
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "node backend/server.js",
+    "dev": "concurrently -s all \"npm:dev:frontend\" \"npm:dev:backend\""
+  },
+  "dependencies": {
+    "concurrently": "^8.0.0"
+  }
+}

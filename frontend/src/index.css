@@ -1,0 +1,57 @@
+/* index.css */
+:root {
+  --verde: #1a5c2a;
+  --verde-claro: #2d8c45;
+  --amarillo: #f5c400;
+  --amarillo-claro: #ffd93d;
+  --blanco: #ffffff;
+  --gris-claro: #f5f5f5;
+  --gris: #e0e0e0;
+  --texto: #222222;
+  --texto-claro: #666666;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  background-color: var(--gris-claro);
+  color: var(--texto);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--gris);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+input:focus, select:focus {
+  border-color: var(--verde);
+}
+/* Quitar flechas de inputs numéricos */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}

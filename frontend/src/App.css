@@ -1,0 +1,251 @@
+:root {
+  color-scheme: light;
+  /* Paleta de colores limpia basada en tu segunda imagen */
+  --bg: #edf2f7;            /* Fondo gris/azul muy suave */
+  --surface: #ffffff;       /* Fondo blanco puro para las tarjetas */
+  --surface-soft: #f8fafc;  /* Fondo de los inputs */
+  --text: #1e272e;          /* Texto principal oscuro casi negro (Muy legible) */
+  --text-muted: #475569;    /* Subtítulos y etiquetas gris oscuro */
+  --primary: #27ae60;       /* Verde vibrante para el estado */
+  --primary-soft: #e8f8f0;  /* Fondo verde claro para alertas */
+  --accent: #3b3db6;        /* Violeta/Azul corporativo exclusivo para botones */
+  --border: rgba(16, 42, 67, 0.08);
+  --shadow: 0 15px 40px rgba(16, 42, 67, 0.06);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  /* Fondo limpio y sutil, quitamos los círculos morados potentes */
+  background: radial-gradient(circle at top left, rgba(39, 174, 96, 0.05), transparent 40%),
+    var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.page-shell {
+  display: grid;
+  place-items: center;
+  padding: 40px 24px;
+}
+
+/* Panel Superior (Fuera de horario / No hay servicio) */
+.hero-panel {
+  width: min(100%, 540px); /* Ajustado al mismo ancho que el formulario para que queden alineados */
+  background: var(--surface);
+  border: 2px solid var(--primary); /* El llamativo borde verde exterior */
+  border-radius: 24px;
+  color: var(--text);
+  padding: 30px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.hero-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.hero-panel h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: var(--primary); /* "Fuera de horario" en verde */
+  font-weight: 700;
+}
+
+.hero-description {
+  margin: 0;
+  color: var(--text);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.hero-badge {
+  align-self: center;
+  background: var(--primary-soft);
+  border: 1px solid rgba(39, 174, 96, 0.2);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 0.85rem;
+}
+
+/* Tarjeta del Formulario */
+.form-card {
+  width: min(540px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 34px;
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
+
+.form-group {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.form-group label {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.form-group input {
+  width: 100%;
+  border: 1px solid rgba(16, 42, 67, 0.12);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 1rem;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Enfoque del input (Borde azul/violeta al hacer click) */
+.form-group input:focus {
+  outline: none;
+  border-color: #4a4ae2;
+  box-shadow: 0 0 0 4px rgba(74, 74, 226, 0.12);
+}
+
+/* Botón Principal Bloqueado (Fuera de Horario) */
+.primary-button {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 20px;
+  background: #dcdde1; /* Color gris de botón inactivo */
+  color: #7f8c8d;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: not-allowed;
+  transition: none;
+  box-shadow: none;
+}
+
+.primary-button:hover {
+  transform: none;
+}
+
+/* Sección Inferior de Cola de Pedidos */
+.queue-section {
+  margin-top: 24px;
+  border-top: 1px solid rgba(16, 42, 67, 0.06);
+  padding-top: 20px;
+}
+
+.queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+/* Título verde de "Cola de pedidos" */
+.queue-header h3, .cola-titulo { 
+  color: #27ae60 !important; 
+  font-weight: 700;
+}
+
+/* Estilo para emular el botón inferior violeta "Ver mi posición en la cola" */
+.ver-posicion-btn {
+  display: block;
+  width: 100%;
+  background: transparent;
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  margin-top: 15px;
+}
+
+.ver-posicion-btn:hover {
+  background: rgba(124, 58, 237, 0.04);
+}
+
+.message-box {
+  margin-top: 24px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.queue-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(16,42,67,0.06);
+}
+
+.order-item.queued { border-left: 4px solid #f59e0b }
+.order-item.ready { border-left: 4px solid #10b981 }
+.order-item.distributed { border-left: 4px solid #6b7280; opacity:0.9 }
+
+.order-main { display:flex; gap:12px; align-items:center }
+.order-main .muted { color: var(--text-muted); font-size: .95rem }
+
+.order-actions { display:flex; gap:8px; align-items:center }
+.status { text-transform: capitalize; font-weight:700; color:var(--text-muted); margin-right:6px }
+
+.small { padding:6px 10px; border-radius:10px; border:none; background:#eef2ff; color: var(--accent); font-weight: 700; cursor:pointer; transition: transform 0.15s ease, background 0.15s ease; }
+.small:hover { transform: translateY(-1px); background: #e4eaff; }
+.small.secondary { background: #f4f5f8; color: var(--text); }
+.small.secondary:hover { background: #e2e4ea; }
+.tiny { padding:6px 8px; border-radius:8px; border:none; background:#f1f5f9; cursor:pointer }
+
+.admin-controls { margin-top:12px; display:flex; flex-direction:column; gap:8px }
+.admin-controls input[type="time"] { width:160px; padding:8px; border-radius:8px; border:1px solid rgba(16,42,67,0.08) }
+
+.hint { display:block; margin-top:6px; color:var(--text-muted); font-size:0.9rem }
+
+@media (max-width: 760px) {
+  .hero-panel {
+    padding: 24px;
+    border-radius: 20px;
+  }
+
+  .form-card {
+    padding: 24px 18px;
+    border-radius: 20px;
+  }
+
+  .page-shell {
+    padding: 20px 12px;
+  }
+}
