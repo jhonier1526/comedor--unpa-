@@ -4,7 +4,7 @@ import { pedirPermiso, enviarNotificacion } from '../notificacion';
 
 const AppContext = createContext();
 // direcion ip
-const API = 'http://localhost:3000';
+const API = 'https://comedor-unpa-production.up.railway.app';
 
 export function AppProvider({ children }) {
   const [turnos, setTurnos]   = useState([]);

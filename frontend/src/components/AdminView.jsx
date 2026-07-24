@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 
-const API = 'http://192.168.101.72:3000';
+const API = 'https://comedor-unpa-production.up.railway.app';
 
 export default function AdminView({ onLogout }) {
   const { turnos, actualizarEstado } = useApp();
