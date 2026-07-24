@@ -23,10 +23,20 @@ export default function StudentView({ onAdminClick }) {
     : 0;
 
   const hora = new Date().getHours();
+
+  const jornadaKey =
+    hora >= 7  && hora < 10 ? 'desayuno' :
+    hora >= 11 && hora < 14 ? 'almuerzo' :
+    hora >= 17 && hora < 20 ? 'cena'     : null;
+
   const jornadaLabel =
-    hora >= 7  && hora < 10 ? '🍳 Desayuno' :
-    hora >= 11 && hora < 14 ? '🍽️ Almuerzo' :
-    hora >= 17 && hora < 20 ? '🌙 Cena'     : '⏰ Fuera de horario';
+    jornadaKey === 'desayuno' ? '🍳 Desayuno' :
+    jornadaKey === 'almuerzo' ? '🍽️ Almuerzo' :
+    jornadaKey === 'cena'     ? '🌙 Cena'     : '⏰ Fuera de horario';
+
+  const jornadaEmoji =
+    jornadaKey === 'desayuno' ? '🍳' :
+    jornadaKey === 'almuerzo' ? '🍽️' : '🌙';
 
   useEffect(() => {
     fetch(`${API}/platos`)
@@ -62,35 +72,33 @@ export default function StudentView({ onAdminClick }) {
     <div style={{ minHeight: '100vh', background: 'var(--gris-claro)' }}>
 
       {/* Header */}
-<div style={{
-  background: 'var(--verde)',
-  padding: '16px 24px',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center'
-}}>
-  <span style={{ color: 'var(--amarillo)', fontWeight: 700, fontSize: 20 }}>
-    Comedor UNPA
-  </span>
-
-  {/* Logo de comida - botón oculto de admin */}
-  <div
-    onClick={onAdminClick}
-    title="Acceso administrador"
-    style={{
-      cursor: 'pointer',
-      fontSize: 28,
-      padding: '4px 8px',
-      borderRadius: 8,
-      transition: 'background 0.2s',
-      userSelect: 'none'
-    }}
-    onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.1)'}
-    onMouseLeave={e => e.target.style.background = 'transparent'}
-  >
-    🍽️
-  </div>
-</div>
+      <div style={{
+        background: 'var(--verde)',
+        padding: '16px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <span style={{ color: 'var(--amarillo)', fontWeight: 700, fontSize: 20 }}>
+          Comedor UNPA
+        </span>
+        <div
+          onClick={onAdminClick}
+          title="Acceso administrador"
+          style={{
+            cursor: 'pointer',
+            fontSize: 28,
+            padding: '4px 8px',
+            borderRadius: 8,
+            transition: 'background 0.2s',
+            userSelect: 'none'
+          }}
+          onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.1)'}
+          onMouseLeave={e => e.target.style.background = 'transparent'}
+        >
+          🍽️
+        </div>
+      </div>
 
       {/* Banner notificaciones */}
       {permiso !== 'granted' && (
@@ -129,43 +137,37 @@ export default function StudentView({ onAdminClick }) {
           {jornadaLabel}
         </div>
 
-        {/* Menú del día */}
-        {platos && (
+        {/* Menú del día - solo muestra la jornada activa */}
+        {platos && jornadaKey && (
           <div style={{
             background: 'var(--blanco)',
             borderRadius: 12,
             padding: 20,
-            marginBottom: 20
+            marginBottom: 20,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
           }}>
-            <h3 style={{ color: 'var(--verde)', marginBottom: 12 }}>📋 Menú del día</h3>
-            {['desayuno', 'almuerzo', 'cena'].map((j, i, arr) => (
-              <div key={j} style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '8px 0',
-                borderBottom: i < arr.length - 1 ? '1px solid var(--gris)' : 'none'
-              }}>
-                <div>
-                  <p style={{ fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>
-                    {j === 'desayuno' ? '🍳' : j === 'almuerzo' ? '🍽️' : '🌙'} {j}
-                  </p>
-                  <p style={{ fontSize: 12, color: 'var(--texto-claro)' }}>
-                    {platos[j]?.descripcion || 'Sin descripción'}
-                  </p>
-                </div>
-                <span style={{
-                  background: platos[j]?.cantidad > 0 ? 'var(--amarillo)' : 'var(--gris)',
-                  color: 'var(--verde)',
-                  fontWeight: 700,
-                  borderRadius: 8,
-                  padding: '4px 10px',
-                  fontSize: 12
-                }}>
-                  {platos[j]?.cantidad > 0 ? `${platos[j].cantidad} disponibles` : 'Agotado'}
-                </span>
-              </div>
-            ))}
+            <div>
+              <p style={{ fontWeight: 700, fontSize: 16, textTransform: 'capitalize', color: 'var(--verde)' }}>
+                {jornadaEmoji} {jornadaKey}
+              </p>
+              <p style={{ fontSize: 13, color: 'var(--texto-claro)', marginTop: 4 }}>
+                {platos[jornadaKey]?.descripcion || 'Sin descripción'}
+              </p>
+            </div>
+            <span style={{
+              background: platos[jornadaKey]?.cantidad > 0 ? 'var(--amarillo)' : 'var(--gris)',
+              color: 'var(--verde)',
+              fontWeight: 700,
+              borderRadius: 8,
+              padding: '6px 14px',
+              fontSize: 14
+            }}>
+              {platos[jornadaKey]?.cantidad > 0
+                ? `${platos[jornadaKey].cantidad} disponibles`
+                : 'Agotado'}
+            </span>
           </div>
         )}
 
