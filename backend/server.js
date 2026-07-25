@@ -9,35 +9,29 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// ─── HORARIOS configurables por el admin ─────────────────────────────────────
-let horarios = {
-  desayuno: { inicio: '07:00', fin: '10:00' },
-  almuerzo: { inicio: '11:00', fin: '14:00' },
-  cena:     { inicio: '17:00', fin: '20:00' }
-};
-
-// ─── PLATOS DISPONIBLES ───────────────────────────────────────────────────────
-let platosDisponibles = {
-  desayuno: { cantidad: 0, descripcion: '' },
-  almuerzo: { cantidad: 0, descripcion: '' },
-  cena:     { cantidad: 0, descripcion: '' }
-};
-
 // ─── DETECTAR JORNADA SEGÚN LA HORA ──────────────────────────────────────────
-function getJornadaActual() {
-  const ahora = new Date();
-  const hhmm = ahora.getHours() * 60 + ahora.getMinutes();
+async function getJornadaActual() {
+  try {
+    const { rows } = await pool.query(
+      `SELECT valor FROM configuracion WHERE clave = 'horarios'`
+    );
+    const horarios = rows[0].valor;
+    const ahora = new Date();
+    const hhmm = ahora.getHours() * 60 + ahora.getMinutes();
 
-  for (const [jornada, rango] of Object.entries(horarios)) {
-    const [ih, im] = rango.inicio.split(':').map(Number);
-    const [fh, fm] = rango.fin.split(':').map(Number);
-    const inicio = ih * 60 + im;
-    const fin    = fh * 60 + fm;
-    if (hhmm >= inicio && hhmm <= fin) {
-      return { jornada, letra: jornada[0].toUpperCase() };
+    for (const [jornada, rango] of Object.entries(horarios)) {
+      const [ih, im] = rango.inicio.split(':').map(Number);
+      const [fh, fm] = rango.fin.split(':').map(Number);
+      const inicio = ih * 60 + im;
+      const fin    = fh * 60 + fm;
+      if (hhmm >= inicio && hhmm <= fin) {
+        return { jornada, letra: jornada[0].toUpperCase() };
+      }
     }
+    return null;
+  } catch (err) {
+    return null;
   }
-  return null;
 }
 
 // ─── RUTA PRINCIPAL ───────────────────────────────────────────────────────────
@@ -46,54 +40,101 @@ app.get('/', (req, res) => {
 });
 
 // ─── HORARIOS ─────────────────────────────────────────────────────────────────
-app.get('/horarios', (req, res) => {
-  res.json(horarios);
+app.get('/horarios', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT valor FROM configuracion WHERE clave = 'horarios'`
+    );
+    res.json(rows[0].valor);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/horarios', (req, res) => {
-  const { desayuno, almuerzo, cena } = req.body;
-  if (desayuno) horarios.desayuno = desayuno;
-  if (almuerzo) horarios.almuerzo = almuerzo;
-  if (cena)     horarios.cena     = cena;
-  res.json({ ok: true, horarios });
+app.post('/horarios', async (req, res) => {
+  try {
+    const { desayuno, almuerzo, cena } = req.body;
+    const { rows } = await pool.query(
+      `SELECT valor FROM configuracion WHERE clave = 'horarios'`
+    );
+    const actual = rows[0].valor;
+    if (desayuno) actual.desayuno = desayuno;
+    if (almuerzo) actual.almuerzo = almuerzo;
+    if (cena)     actual.cena     = cena;
+
+    await pool.query(
+      `UPDATE configuracion SET valor = $1, updated_at = NOW() WHERE clave = 'horarios'`,
+      [JSON.stringify(actual)]
+    );
+    res.json({ ok: true, horarios: actual });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─── PLATOS ───────────────────────────────────────────────────────────────────
-app.get('/platos', (req, res) => {
-  res.json(platosDisponibles);
+app.get('/platos', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT valor FROM configuracion WHERE clave = 'platos'`
+    );
+    res.json(rows[0].valor);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/platos', (req, res) => {
-  const { desayuno, almuerzo, cena } = req.body;
-  if (desayuno !== undefined) platosDisponibles.desayuno = desayuno;
-  if (almuerzo !== undefined) platosDisponibles.almuerzo = almuerzo;
-  if (cena     !== undefined) platosDisponibles.cena     = cena;
-  res.json({ ok: true, platosDisponibles });
+app.post('/platos', async (req, res) => {
+  try {
+    const { desayuno, almuerzo, cena } = req.body;
+    const { rows } = await pool.query(
+      `SELECT valor FROM configuracion WHERE clave = 'platos'`
+    );
+    const actual = rows[0].valor;
+    if (desayuno !== undefined) actual.desayuno = desayuno;
+    if (almuerzo !== undefined) actual.almuerzo = almuerzo;
+    if (cena     !== undefined) actual.cena     = cena;
+
+    await pool.query(
+      `UPDATE configuracion SET valor = $1, updated_at = NOW() WHERE clave = 'platos'`,
+      [JSON.stringify(actual)]
+    );
+    res.json({ ok: true, platosDisponibles: actual });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─── CREAR TURNO ──────────────────────────────────────────────────────────────
 app.post('/orders', async (req, res) => {
-  const { nombre, codigoEstudiante } = req.body;
+  const { nombre, codigoEstudiante, platoElegido } = req.body;
 
-  if (!nombre || !codigoEstudiante) {
-    return res.status(400).json({ error: 'Faltan campos: nombre, codigoEstudiante' });
+  if (!nombre || !codigoEstudiante || !platoElegido) {
+    return res.status(400).json({ error: 'Faltan campos: nombre, codigoEstudiante, platoElegido' });
   }
 
-  const jornadaActual = getJornadaActual();
+  const jornadaActual = await getJornadaActual();
   if (!jornadaActual) {
     return res.status(400).json({ error: 'Fuera de horario de atención.' });
   }
 
   try {
-    // ─── Verificar platos disponibles ────────────────────────────────────────
-    const platosJornada = platosDisponibles[jornadaActual.jornada].cantidad;
-    if (platosJornada <= 0) {
-      return res.status(400).json({
-        error: `No hay platos disponibles para ${jornadaActual.jornada} de hoy.`
-      });
+    // ─── Verificar plato disponible ───────────────────────────────────────
+    const { rows: platosRows } = await pool.query(
+      `SELECT valor FROM configuracion WHERE clave = 'platos'`
+    );
+    const platosActuales = platosRows[0].valor;
+    const platos = platosActuales[jornadaActual.jornada];
+    const platoIndex = platos.findIndex(p => p.nombre === platoElegido);
+
+    if (platoIndex === -1) {
+      return res.status(400).json({ error: 'Plato no encontrado.' });
+    }
+    if (platos[platoIndex].cantidad <= 0) {
+      return res.status(400).json({ error: `El plato "${platoElegido}" está agotado.` });
     }
 
-    // ─── Verificar por nombre Y código ───────────────────────────────────────
+    // ─── Verificar turno duplicado ────────────────────────────────────────
     const { rows: existente } = await pool.query(
       `SELECT id FROM turnos 
        WHERE codigo_estudiante = $1
@@ -110,7 +151,7 @@ app.post('/orders', async (req, res) => {
       });
     }
 
-    // ─── Generar número y letra del turno ────────────────────────────────────
+    // ─── Generar turno ────────────────────────────────────────────────────
     const { rows: existing } = await pool.query(
       `SELECT COUNT(*) FROM turnos 
        WHERE turno_letra LIKE $1 AND fecha = CURRENT_DATE`,
@@ -120,21 +161,24 @@ app.post('/orders', async (req, res) => {
     const seq = parseInt(existing[0].count) + 1;
     const turno_letra = `${jornadaActual.letra}${seq}`;
 
-    // ─── Insertar turno ───────────────────────────────────────────────────────
     const { rows } = await pool.query(
       `INSERT INTO turnos 
-        (numero_turno, nombre, codigo_estudiante, estado, jornada, turno_letra)
-       VALUES ($1, $2, $3, 'pendiente', $4, $5)
+        (numero_turno, nombre, codigo_estudiante, estado, jornada, turno_letra, plato_elegido)
+       VALUES ($1, $2, $3, 'pendiente', $4, $5, $6)
        RETURNING *`,
-      [seq, nombre, String(codigoEstudiante).slice(0, 8), jornadaActual.jornada, turno_letra]
+      [seq, nombre, String(codigoEstudiante).slice(0, 8), jornadaActual.jornada, turno_letra, platoElegido]
     );
 
-    // ─── Descontar un plato ───────────────────────────────────────────────────
-    platosDisponibles[jornadaActual.jornada].cantidad--;
+    // ─── Descontar plato ──────────────────────────────────────────────────
+    platosActuales[jornadaActual.jornada][platoIndex].cantidad--;
+    await pool.query(
+      `UPDATE configuracion SET valor = $1 WHERE clave = 'platos'`,
+      [JSON.stringify(platosActuales)]
+    );
 
     return res.status(201).json(rows[0]);
   } catch (err) {
-    console.error('❌ Error al crear turno:', err.message);
+    console.error('❌ Error:', err.message);
     return res.status(500).json({ error: err.message });
   }
 });
@@ -190,4 +234,4 @@ app.post('/admin/login', (req, res) => {
 // ─── ARRANCAR SERVIDOR ────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-});
+});S
