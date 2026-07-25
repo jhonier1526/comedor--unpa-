@@ -19,6 +19,13 @@ export default function AdminView({ onLogout }) {
   });
   const [guardadoHorarios, setGuardadoHorarios] = useState(false);
 
+  useEffect(() => {
+    fetch(`${API}/horarios`)
+      .then(r => r.json())
+      .then(data => setHorarios(data))
+      .catch(err => console.error('Error cargando horarios:', err));
+  }, []);
+
   async function guardarHorarios() {
     await fetch(`${API}/horarios`, {
       method: 'POST',
@@ -30,17 +37,46 @@ export default function AdminView({ onLogout }) {
   }
 
   // ─── Panel de platos ────────────────────────────────────────────────────────
-  const [platos, setPlatos] = useState({
-    desayuno: { cantidad: 0, descripcion: '' },
-    almuerzo: { cantidad: 0, descripcion: '' },
-    cena:     { cantidad: 0, descripcion: '' }
-  });
+  const platosIniciales = {
+    desayuno: [
+      { nombre: '', cantidad: 0 },
+      { nombre: '', cantidad: 0 },
+      { nombre: '', cantidad: 0 }
+    ],
+    almuerzo: [
+      { nombre: '', cantidad: 0 },
+      { nombre: '', cantidad: 0 },
+      { nombre: '', cantidad: 0 }
+    ],
+    cena: [
+      { nombre: '', cantidad: 0 },
+      { nombre: '', cantidad: 0 },
+      { nombre: '', cantidad: 0 }
+    ]
+  };
+
+  const [platos, setPlatos] = useState(platosIniciales);
   const [guardadoPlatos, setGuardadoPlatos] = useState(false);
 
   useEffect(() => {
     fetch(`${API}/platos`)
       .then(r => r.json())
-      .then(data => setPlatos(data))
+      .then(data => {
+        // Compatibilidad con formato viejo y nuevo
+        const nuevo = {};
+        ['desayuno', 'almuerzo', 'cena'].forEach(j => {
+          if (Array.isArray(data[j])) {
+            nuevo[j] = data[j];
+          } else {
+            nuevo[j] = [
+              { nombre: data[j]?.descripcion || '', cantidad: data[j]?.cantidad || 0 },
+              { nombre: '', cantidad: 0 },
+              { nombre: '', cantidad: 0 }
+            ];
+          }
+        });
+        setPlatos(nuevo);
+      })
       .catch(err => console.error('Error cargando platos:', err));
   }, []);
 
@@ -83,6 +119,11 @@ export default function AdminView({ onLogout }) {
             <p style={{ fontSize: 12, color: 'var(--texto-claro)' }}>
               {turno.codigo_estudiante} · {turno.jornada} · {turno.hora?.slice(0, 5)}
             </p>
+            {turno.plato_elegido && (
+              <p style={{ fontSize: 12, color: 'var(--verde)', fontWeight: 600 }}>
+                🍴 {turno.plato_elegido}
+              </p>
+            )}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -170,42 +211,61 @@ export default function AdminView({ onLogout }) {
           <h3 style={{ color: 'var(--verde)', marginBottom: 16 }}>🍽️ Platos disponibles</h3>
 
           {['desayuno', 'almuerzo', 'cena'].map(j => (
-            <div key={j} style={{ marginBottom: 20 }}>
-              <span style={{
-                fontWeight: 600,
-                textTransform: 'capitalize',
+            <div key={j} style={{ marginBottom: 24 }}>
+              <p style={{
+                fontWeight: 700,
                 color: 'var(--verde)',
-                display: 'block',
-                marginBottom: 8
+                fontSize: 15,
+                marginBottom: 10,
+                textTransform: 'capitalize'
               }}>
                 {j === 'desayuno' ? '🍳' : j === 'almuerzo' ? '🍽️' : '🌙'} {j}
-              </span>
+              </p>
 
-              {/* Cantidad */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                <input
-                  type="number"
-                  min="0"
-                  value={platos[j].cantidad}
-                  onChange={e => setPlatos(p => ({
-                    ...p, [j]: { ...p[j], cantidad: Number(e.target.value) }
-                  }))}
-                  style={{ width: 100 }}
-                  placeholder="Cantidad"
-                />
-                <span style={{ fontSize: 13, color: 'var(--texto-claro)' }}>platos</span>
-              </div>
-
-              {/* Descripción */}
-              <input
-                type="text"
-                value={platos[j].descripcion}
-                onChange={e => setPlatos(p => ({
-                  ...p, [j]: { ...p[j], descripcion: e.target.value }
-                }))}
-                placeholder={`Descripción del ${j} (ej: Arroz con pollo y ensalada)`}
-                style={{ width: '100%' }}
-              />
+              {platos[j].map((plato, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  gap: 10,
+                  marginBottom: 8,
+                  alignItems: 'center'
+                }}>
+                  <span style={{
+                    background: 'var(--amarillo)',
+                    color: 'var(--verde)',
+                    fontWeight: 700,
+                    borderRadius: 6,
+                    padding: '4px 8px',
+                    fontSize: 12,
+                    minWidth: 24,
+                    textAlign: 'center'
+                  }}>
+                    {i + 1}
+                  </span>
+                  <input
+                    type="text"
+                    value={plato.nombre}
+                    onChange={e => {
+                      const nuevos = [...platos[j]];
+                      nuevos[i] = { ...nuevos[i], nombre: e.target.value };
+                      setPlatos(p => ({ ...p, [j]: nuevos }));
+                    }}
+                    placeholder={`Opción ${i + 1} (ej: Pollo asado)`}
+                    style={{ flex: 1 }}
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    value={plato.cantidad}
+                    onChange={e => {
+                      const nuevos = [...platos[j]];
+                      nuevos[i] = { ...nuevos[i], cantidad: Number(e.target.value) };
+                      setPlatos(p => ({ ...p, [j]: nuevos }));
+                    }}
+                    style={{ width: 70 }}
+                    placeholder="Cant."
+                  />
+                </div>
+              ))}
             </div>
           ))}
 
