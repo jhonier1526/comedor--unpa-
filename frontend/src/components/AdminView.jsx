@@ -201,85 +201,126 @@ export default function AdminView({ onLogout }) {
 
       <div style={{ maxWidth: 600, margin: '32px auto', padding: '0 16px' }}>
 
-        {/* Panel de platos */}
-        <div style={{
-          background: 'var(--blanco)',
-          borderRadius: 12,
-          padding: 24,
-          marginBottom: 28
+       {/* Panel de platos */}
+<div style={{
+  background: 'var(--blanco)',
+  borderRadius: 12,
+  padding: 24,
+  marginBottom: 28
+}}>
+  <h3 style={{ color: 'var(--verde)', marginBottom: 16 }}>🍽️ Platos disponibles</h3>
+
+  {['desayuno', 'almuerzo', 'cena'].map(j => (
+    <div key={j} style={{ marginBottom: 24 }}>
+      <p style={{
+        fontWeight: 700,
+        color: 'var(--verde)',
+        fontSize: 15,
+        marginBottom: 10,
+        textTransform: 'capitalize'
+      }}>
+        {j === 'desayuno' ? '🍳' : j === 'almuerzo' ? '🍽️' : '🌙'} {j}
+      </p>
+
+      {platos[j].map((plato, i) => (
+        <div key={i} style={{
+          display: 'flex',
+          gap: 10,
+          marginBottom: 8,
+          alignItems: 'center'
         }}>
-          <h3 style={{ color: 'var(--verde)', marginBottom: 16 }}>🍽️ Platos disponibles</h3>
-
-          {['desayuno', 'almuerzo', 'cena'].map(j => (
-            <div key={j} style={{ marginBottom: 24 }}>
-              <p style={{
-                fontWeight: 700,
-                color: 'var(--verde)',
-                fontSize: 15,
-                marginBottom: 10,
-                textTransform: 'capitalize'
-              }}>
-                {j === 'desayuno' ? '🍳' : j === 'almuerzo' ? '🍽️' : '🌙'} {j}
-              </p>
-
-              {platos[j].map((plato, i) => (
-                <div key={i} style={{
-                  display: 'flex',
-                  gap: 10,
-                  marginBottom: 8,
-                  alignItems: 'center'
-                }}>
-                  <span style={{
-                    background: 'var(--amarillo)',
-                    color: 'var(--verde)',
-                    fontWeight: 700,
-                    borderRadius: 6,
-                    padding: '4px 8px',
-                    fontSize: 12,
-                    minWidth: 24,
-                    textAlign: 'center'
-                  }}>
-                    {i + 1}
-                  </span>
-                  <input
-                    type="text"
-                    value={plato.nombre}
-                    onChange={e => {
-                      const nuevos = [...platos[j]];
-                      nuevos[i] = { ...nuevos[i], nombre: e.target.value };
-                      setPlatos(p => ({ ...p, [j]: nuevos }));
-                    }}
-                    placeholder={`Opción ${i + 1} (ej: Pollo asado)`}
-                    style={{ flex: 1 }}
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    value={plato.cantidad}
-                    onChange={e => {
-                      const nuevos = [...platos[j]];
-                      nuevos[i] = { ...nuevos[i], cantidad: Number(e.target.value) };
-                      setPlatos(p => ({ ...p, [j]: nuevos }));
-                    }}
-                    style={{ width: 70 }}
-                    placeholder="Cant."
-                  />
-                </div>
-              ))}
-            </div>
-          ))}
-
-          <button
-            onClick={guardarPlatos}
-            style={{
-              background: guardadoPlatos ? 'var(--verde-claro)' : 'var(--verde)',
-              color: 'var(--blanco)',
-              marginTop: 8
+          <span style={{
+            background: 'var(--amarillo)',
+            color: 'var(--verde)',
+            fontWeight: 700,
+            borderRadius: 6,
+            padding: '4px 8px',
+            fontSize: 12,
+            minWidth: 24,
+            textAlign: 'center'
+          }}>
+            {i + 1}
+          </span>
+          <input
+            type="text"
+            value={plato.nombre}
+            onChange={e => {
+              const nuevos = [...platos[j]];
+              nuevos[i] = { ...nuevos[i], nombre: e.target.value };
+              setPlatos(p => ({ ...p, [j]: nuevos }));
             }}
-          >
-            {guardadoPlatos ? '✅ Guardado' : 'Guardar platos'}
-          </button>
+            placeholder={`Opción ${i + 1} (ej: Pollo asado)`}
+            style={{ flex: 1 }}
+          />
+          <input
+            type="number"
+            min="0"
+            value={plato.cantidad}
+            onChange={e => {
+              const nuevos = [...platos[j]];
+              nuevos[i] = { ...nuevos[i], cantidad: Number(e.target.value) };
+              setPlatos(p => ({ ...p, [j]: nuevos }));
+            }}
+            style={{ width: 70 }}
+            placeholder="Cant."
+          />
+          {/* Botón eliminar — solo si hay más de 1 */}
+          {platos[j].length > 1 && (
+            <button
+              onClick={() => {
+                const nuevos = platos[j].filter((_, idx) => idx !== i);
+                setPlatos(p => ({ ...p, [j]: nuevos }));
+              }}
+              style={{
+                background: '#ffeeee',
+                color: '#cc0000',
+                border: '1px solid #ffcccc',
+                borderRadius: 6,
+                padding: '4px 8px',
+                fontSize: 14,
+                cursor: 'pointer'
+              }}
+            >
+              ✕
+            </button>
+          )}
         </div>
+      ))}
+
+      {/* Botón agregar plato */}
+      <button
+        onClick={() => setPlatos(p => ({
+          ...p,
+          [j]: [...p[j], { nombre: '', cantidad: 0 }]
+        }))}
+        style={{
+          background: 'transparent',
+          border: '1px dashed var(--verde)',
+          color: 'var(--verde)',
+          borderRadius: 8,
+          padding: '6px 14px',
+          fontSize: 13,
+          cursor: 'pointer',
+          marginTop: 4,
+          width: '100%'
+        }}
+      >
+        + Agregar opción
+      </button>
+    </div>
+  ))}
+
+  <button
+    onClick={guardarPlatos}
+    style={{
+      background: guardadoPlatos ? 'var(--verde-claro)' : 'var(--verde)',
+      color: 'var(--blanco)',
+      marginTop: 8
+    }}
+  >
+    {guardadoPlatos ? '✅ Guardado' : 'Guardar platos'}
+  </button>
+</div>
 
         {/* Panel de horarios */}
         <div style={{
