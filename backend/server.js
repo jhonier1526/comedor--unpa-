@@ -234,4 +234,4 @@ app.post('/admin/login', (req, res) => {
 // ─── ARRANCAR SERVIDOR ────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-});S
+});
