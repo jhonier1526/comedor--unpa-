@@ -7,13 +7,14 @@ const API = 'https://comedor-unpa-production.up.railway.app';
 
 export default function StudentView({ onAdminClick }) {
   const { turnos, tomarTurno } = useApp();
-  const [nombre, setNombre]             = useState('');
-  const [codigo, setCodigo]             = useState('');
-  const [miTurno, setMiTurno]           = useState(null);
-  const [error, setError]               = useState('');
-  const [permiso, setPermiso]           = useState(Notification.permission);
-  const [aceptoTerminos, setAceptoTerminos] = useState(false);
-  const [platos, setPlatos]             = useState(null);
+  const [nombre, setNombre]                     = useState('');
+  const [codigo, setCodigo]                     = useState('');
+  const [miTurno, setMiTurno]                   = useState(null);
+  const [error, setError]                       = useState('');
+  const [permiso, setPermiso]                   = useState(Notification.permission);
+  const [aceptoTerminos, setAceptoTerminos]     = useState(false);
+  const [platos, setPlatos]                     = useState(null);
+  const [platoElegido, setPlatoElegido]         = useState('');
 
   const pendientes = turnos.filter(t => t.estado === 'pendiente');
   const enProceso  = turnos.find(t => t.estado === 'en proceso');
@@ -45,9 +46,18 @@ export default function StudentView({ onAdminClick }) {
       .catch(err => console.error(err));
   }, []);
 
+  // Platos disponibles de la jornada actual
+  const platosJornada = platos && jornadaKey && Array.isArray(platos[jornadaKey])
+    ? platos[jornadaKey].filter(p => p.nombre && p.cantidad > 0)
+    : [];
+
   async function handleTomar() {
     if (!nombre || !codigo) {
       setError('Por favor completa todos los campos.');
+      return;
+    }
+    if (!platoElegido) {
+      setError('Por favor elige un plato.');
       return;
     }
     if (!aceptoTerminos) {
@@ -55,11 +65,12 @@ export default function StudentView({ onAdminClick }) {
       return;
     }
     setError('');
-    const turno = await tomarTurno(nombre, codigo);
+    const turno = await tomarTurno(nombre, codigo, platoElegido);
     if (turno.error) { setError(turno.error); return; }
     setMiTurno(turno);
     setNombre('');
     setCodigo('');
+    setPlatoElegido('');
     setAceptoTerminos(false);
   }
 
@@ -137,37 +148,42 @@ export default function StudentView({ onAdminClick }) {
           {jornadaLabel}
         </div>
 
-        {/* Menú del día - solo muestra la jornada activa */}
+        {/* Menú del día - solo jornada activa */}
         {platos && jornadaKey && (
           <div style={{
             background: 'var(--blanco)',
             borderRadius: 12,
             padding: 20,
-            marginBottom: 20,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+            marginBottom: 20
           }}>
-            <div>
-              <p style={{ fontWeight: 700, fontSize: 16, textTransform: 'capitalize', color: 'var(--verde)' }}>
-                {jornadaEmoji} {jornadaKey}
+            <h3 style={{ color: 'var(--verde)', marginBottom: 12 }}>📋 Opciones del {jornadaKey}</h3>
+            {platosJornada.length === 0 ? (
+              <p style={{ color: 'var(--texto-claro)', fontSize: 14, textAlign: 'center' }}>
+                Sin platos disponibles por el momento
               </p>
-              <p style={{ fontSize: 13, color: 'var(--texto-claro)', marginTop: 4 }}>
-                {platos[jornadaKey]?.descripcion || 'Sin descripción'}
-              </p>
-            </div>
-            <span style={{
-              background: platos[jornadaKey]?.cantidad > 0 ? 'var(--amarillo)' : 'var(--gris)',
-              color: 'var(--verde)',
-              fontWeight: 700,
-              borderRadius: 8,
-              padding: '6px 14px',
-              fontSize: 14
-            }}>
-              {platos[jornadaKey]?.cantidad > 0
-                ? `${platos[jornadaKey].cantidad} disponibles`
-                : 'Agotado'}
-            </span>
+            ) : (
+              platosJornada.map((p, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '8px 0',
+                  borderBottom: i < platosJornada.length - 1 ? '1px solid var(--gris)' : 'none'
+                }}>
+                  <p style={{ fontWeight: 600, fontSize: 14 }}>🍴 {p.nombre}</p>
+                  <span style={{
+                    background: 'var(--amarillo)',
+                    color: 'var(--verde)',
+                    fontWeight: 700,
+                    borderRadius: 8,
+                    padding: '4px 10px',
+                    fontSize: 12
+                  }}>
+                    {p.cantidad} disponibles
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         )}
 
@@ -220,8 +236,8 @@ export default function StudentView({ onAdminClick }) {
                 <p style={{ fontWeight: 600 }}>{miTurno.codigo_estudiante}</p>
               </div>
               <div>
-                <p style={{ fontSize: 11, color: 'var(--texto-claro)' }}>Jornada</p>
-                <p style={{ fontWeight: 600 }}>{miTurno.jornada}</p>
+                <p style={{ fontSize: 11, color: 'var(--texto-claro)' }}>Plato</p>
+                <p style={{ fontWeight: 600 }}>{miTurno.plato_elegido || miTurno.jornada}</p>
               </div>
             </div>
           </div>
@@ -359,6 +375,56 @@ export default function StudentView({ onAdminClick }) {
               />
             </div>
           </div>
+
+          {/* Selector de plato */}
+          {platosJornada.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <label style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'var(--verde)',
+                display: 'block',
+                marginBottom: 8,
+                textTransform: 'uppercase',
+                letterSpacing: 1
+              }}>
+                Elige tu plato
+              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {platosJornada.map((p, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setPlatoElegido(p.nombre)}
+                    style={{
+                      padding: '12px 16px',
+                      border: `2px solid ${platoElegido === p.nombre ? 'var(--verde)' : 'var(--gris)'}`,
+                      borderRadius: 10,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      background: platoElegido === p.nombre ? '#f0faf2' : 'var(--blanco)',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>
+                      {platoElegido === p.nombre ? '✅' : '🍴'} {p.nombre}
+                    </span>
+                    <span style={{
+                      background: 'var(--amarillo)',
+                      color: 'var(--verde)',
+                      fontWeight: 700,
+                      borderRadius: 6,
+                      padding: '2px 8px',
+                      fontSize: 12
+                    }}>
+                      {p.cantidad} disponibles
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Términos */}
           <div style={{
