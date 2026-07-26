@@ -7,14 +7,17 @@ const API = 'https://comedor-unpa-production.up.railway.app';
 
 export default function StudentView({ onAdminClick }) {
   const { turnos, tomarTurno } = useApp();
-  const [nombre, setNombre]                     = useState('');
-  const [codigo, setCodigo]                     = useState('');
-  const [miTurno, setMiTurno]                   = useState(null);
-  const [error, setError]                       = useState('');
-  const [permiso, setPermiso]                   = useState(Notification.permission);
-  const [aceptoTerminos, setAceptoTerminos]     = useState(false);
-  const [platos, setPlatos]                     = useState(null);
-  const [platoElegido, setPlatoElegido]         = useState('');
+  const [nombre, setNombre]                 = useState('');
+  const [codigo, setCodigo]                 = useState('');
+  const [miTurno, setMiTurno]               = useState(null);
+  const [error, setError]                   = useState('');
+  const [permiso, setPermiso]               = useState(
+    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  );
+  const [aceptoTerminos, setAceptoTerminos] = useState(false);
+  const [platos, setPlatos]                 = useState(null);
+  const [platoElegido, setPlatoElegido]     = useState('');
+  const [jornadaKey, setJornadaKey]         = useState(null);
 
   const pendientes = turnos.filter(t => t.estado === 'pendiente');
   const enProceso  = turnos.find(t => t.estado === 'en proceso');
@@ -22,13 +25,6 @@ export default function StudentView({ onAdminClick }) {
   const antesQueMi = miTurno
     ? pendientes.filter(t => t.numero_turno < miTurno.numero_turno).length
     : 0;
-
-  const hora = new Date().getHours();
-
-  const jornadaKey =
-    hora >= 7  && hora < 10 ? 'desayuno' :
-    hora >= 11 && hora < 14 ? 'almuerzo' :
-    hora >= 17 && hora < 20 ? 'cena'     : null;
 
   const jornadaLabel =
     jornadaKey === 'desayuno' ? '🍳 Desayuno' :
@@ -39,6 +35,21 @@ export default function StudentView({ onAdminClick }) {
     jornadaKey === 'desayuno' ? '🍳' :
     jornadaKey === 'almuerzo' ? '🍽️' : '🌙';
 
+  // ─── Cargar jornada desde el backend ─────────────────────────────────────
+  useEffect(() => {
+    function cargarJornada() {
+      fetch(`${API}/jornada`)
+        .then(r => r.json())
+        .then(data => setJornadaKey(data.jornada))
+        .catch(err => console.error('Error cargando jornada:', err));
+    }
+
+    cargarJornada();
+    const intervalo = setInterval(cargarJornada, 60000); // cada minuto
+    return () => clearInterval(intervalo);
+  }, []);
+
+  // ─── Cargar platos ────────────────────────────────────────────────────────
   useEffect(() => {
     fetch(`${API}/platos`)
       .then(r => r.json())
@@ -148,7 +159,41 @@ export default function StudentView({ onAdminClick }) {
           {jornadaLabel}
         </div>
 
-        
+        {/* Menú del día - solo jornada activa */}
+        {platos && jornadaKey && platosJornada.length > 0 && (
+          <div style={{
+            background: 'var(--blanco)',
+            borderRadius: 12,
+            padding: 20,
+            marginBottom: 20
+          }}>
+            <h3 style={{ color: 'var(--verde)', marginBottom: 12 }}>
+              📋 Opciones del {jornadaKey}
+            </h3>
+            {platosJornada.map((p, i) => (
+              <div key={i} style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '8px 0',
+                borderBottom: i < platosJornada.length - 1 ? '1px solid var(--gris)' : 'none'
+              }}>
+                <p style={{ fontWeight: 600, fontSize: 14 }}>🍴 {p.nombre}</p>
+                <span style={{
+                  background: 'var(--amarillo)',
+                  color: 'var(--verde)',
+                  fontWeight: 700,
+                  borderRadius: 8,
+                  padding: '4px 10px',
+                  fontSize: 12
+                }}>
+                  {p.cantidad} disponibles
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Turno en atención */}
         <div style={{
           background: 'var(--verde)',

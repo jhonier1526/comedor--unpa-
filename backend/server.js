@@ -52,6 +52,17 @@ app.get('/', (req, res) => {
   res.json({ message: '✅ Servidor del Comedor UNPA funcionando' });
 });
 
+// ─── JORNADA ACTUAL ───────────────────────────────────────────────────────────
+app.get('/jornada', async (req, res) => {
+  const jornadaActual = await getJornadaActual();
+  res.json({
+    jornada: jornadaActual ? jornadaActual.jornada : null,
+    letra:   jornadaActual ? jornadaActual.letra   : null,
+    activa:  jornadaActual !== null,
+    horaColombia: getHoraColombia()
+  });
+});
+
 // ─── HORARIOS ─────────────────────────────────────────────────────────────────
 app.get('/horarios', async (req, res) => {
   try {
