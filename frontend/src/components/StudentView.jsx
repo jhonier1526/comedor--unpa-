@@ -148,45 +148,7 @@ export default function StudentView({ onAdminClick }) {
           {jornadaLabel}
         </div>
 
-        {/* Menú del día - solo jornada activa */}
-        {platos && jornadaKey && (
-          <div style={{
-            background: 'var(--blanco)',
-            borderRadius: 12,
-            padding: 20,
-            marginBottom: 20
-          }}>
-            <h3 style={{ color: 'var(--verde)', marginBottom: 12 }}>📋 Opciones del {jornadaKey}</h3>
-            {platosJornada.length === 0 ? (
-              <p style={{ color: 'var(--texto-claro)', fontSize: 14, textAlign: 'center' }}>
-                Sin platos disponibles por el momento
-              </p>
-            ) : (
-              platosJornada.map((p, i) => (
-                <div key={i} style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '8px 0',
-                  borderBottom: i < platosJornada.length - 1 ? '1px solid var(--gris)' : 'none'
-                }}>
-                  <p style={{ fontWeight: 600, fontSize: 14 }}>🍴 {p.nombre}</p>
-                  <span style={{
-                    background: 'var(--amarillo)',
-                    color: 'var(--verde)',
-                    fontWeight: 700,
-                    borderRadius: 8,
-                    padding: '4px 10px',
-                    fontSize: 12
-                  }}>
-                    {p.cantidad} disponibles
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
+        
         {/* Turno en atención */}
         <div style={{
           background: 'var(--verde)',
