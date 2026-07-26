@@ -9,6 +9,15 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// ─── HORA DE COLOMBIA ─────────────────────────────────────────────────────────
+function getHoraColombia() {
+  const ahora = new Date();
+  const colombiaOffset = -5 * 60;
+  const utc = ahora.getTime() + ahora.getTimezoneOffset() * 60000;
+  const colombiaTime = new Date(utc + colombiaOffset * 60000);
+  return colombiaTime.getHours() * 60 + colombiaTime.getMinutes();
+}
+
 // ─── DETECTAR JORNADA SEGÚN LA HORA ──────────────────────────────────────────
 async function getJornadaActual() {
   try {
@@ -16,8 +25,9 @@ async function getJornadaActual() {
       `SELECT valor FROM configuracion WHERE clave = 'horarios'`
     );
     const horarios = rows[0].valor;
-    const ahora = new Date();
-    const hhmm = ahora.getHours() * 60 + ahora.getMinutes();
+    const hhmm = getHoraColombia();
+
+    console.log('⏰ Hora Colombia (min):', hhmm);
 
     for (const [jornada, rango] of Object.entries(horarios)) {
       const [ih, im] = rango.inicio.split(':').map(Number);
@@ -25,11 +35,14 @@ async function getJornadaActual() {
       const inicio = ih * 60 + im;
       const fin    = fh * 60 + fm;
       if (hhmm >= inicio && hhmm <= fin) {
+        console.log('✅ Jornada detectada:', jornada);
         return { jornada, letra: jornada[0].toUpperCase() };
       }
     }
+    console.log('❌ Fuera de horario');
     return null;
   } catch (err) {
+    console.error('Error en getJornadaActual:', err.message);
     return null;
   }
 }
@@ -125,6 +138,11 @@ app.post('/orders', async (req, res) => {
     );
     const platosActuales = platosRows[0].valor;
     const platos = platosActuales[jornadaActual.jornada];
+
+    console.log('🍽️ Jornada:', jornadaActual.jornada);
+    console.log('🍴 Plato elegido:', platoElegido);
+    console.log('📋 Platos en BD:', JSON.stringify(platos));
+
     const platoIndex = platos.findIndex(p => p.nombre === platoElegido);
 
     if (platoIndex === -1) {
