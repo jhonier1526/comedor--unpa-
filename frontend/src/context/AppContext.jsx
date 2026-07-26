@@ -66,11 +66,11 @@ export function AppProvider({ children }) {
     }
   }
 
-  async function tomarTurno(nombre, codigoEstudiante) {
+  async function tomarTurno(nombre, codigoEstudiante,platoElegido) {
     const res = await fetch(`${API}/orders`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, codigoEstudiante })
+      body: JSON.stringify({ nombre, codigoEstudiante, platoElegido })
     });
     const data = await res.json();
 
