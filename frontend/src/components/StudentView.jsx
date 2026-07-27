@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { pedirPermiso } from '../notificacion';
 
-const API = 'https://comedor-unpa-production.up.railway.app';
+const API = 'https://comedor-unpa.onrender.com';
 
 export default function StudentView({ onAdminClick }) {
   const { turnos, tomarTurno } = useApp();

@@ -5,7 +5,7 @@ import { pedirPermiso, enviarNotificacion } from '../notificacion';
  
 const AppContext = createContext();
 // direcion ip
-const API = 'https://comedor-unpa-production.up.railway.app';
+const API = 'https://comedor-unpa.onrender.com';
  
 export function AppProvider({ children }) {
   const [turnos, setTurnos]   = useState([]);
