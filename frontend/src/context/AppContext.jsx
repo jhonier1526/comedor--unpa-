@@ -1,24 +1,31 @@
+
 // context/AppContext.jsx
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { pedirPermiso, enviarNotificacion } from '../notificacion';
-
+ 
 const AppContext = createContext();
 // direcion ip
 const API = 'https://comedor-unpa-production.up.railway.app';
-
+ 
 export function AppProvider({ children }) {
   const [turnos, setTurnos]   = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const miTurnoRef            = useRef(null);
   const notificadoRef         = useRef({ llamado: false, tres: false, siguiente: false });
-
+ 
   useEffect(() => {
-    pedirPermiso();
+    // ✅ Seguro para iPhone: solo pide permiso de notificaciones si el
+    // objeto Notification existe en este contexto (en Safari/iOS puede
+    // no estar disponible, sobre todo fuera de una PWA instalada).
+    if (typeof Notification !== 'undefined') {
+      pedirPermiso();
+    }
+ 
     cargarTurnos();
     const intervalo = setInterval(cargarTurnos, 5000);
     return () => clearInterval(intervalo);
   }, []);
-
+ 
   async function cargarTurnos() {
     try {
       const res  = await fetch(`${API}/orders`);
@@ -29,15 +36,15 @@ export function AppProvider({ children }) {
       console.error('Error cargando turnos:', err);
     }
   }
-
+ 
   function verificarAvisos(data) {
     const miTurno = miTurnoRef.current;
     if (!miTurno) return;
-
+ 
     const pendientes = data.filter(t => t.estado === 'pendiente');
     const enProceso  = data.find(t => t.estado === 'en proceso');
     const antesQueMi = pendientes.filter(t => t.numero_turno < miTurno.numero_turno).length;
-
+ 
     // 1. Admin llamó mi turno
     if (enProceso?.id === miTurno.id && !notificadoRef.current.llamado) {
       enviarNotificacion(
@@ -46,7 +53,7 @@ export function AppProvider({ children }) {
       );
       notificadoRef.current.llamado = true;
     }
-
+ 
     // 2. Faltan 3 turnos
     if (antesQueMi === 3 && !notificadoRef.current.tres) {
       enviarNotificacion(
@@ -55,7 +62,7 @@ export function AppProvider({ children }) {
       );
       notificadoRef.current.tres = true;
     }
-
+ 
     // 3. Eres el siguiente
     if (antesQueMi === 0 && !notificadoRef.current.siguiente && !notificadoRef.current.llamado) {
       enviarNotificacion(
@@ -65,7 +72,7 @@ export function AppProvider({ children }) {
       notificadoRef.current.siguiente = true;
     }
   }
-
+ 
   async function tomarTurno(nombre, codigoEstudiante,platoElegido) {
     const res = await fetch(`${API}/orders`, {
       method: 'POST',
@@ -73,16 +80,16 @@ export function AppProvider({ children }) {
       body: JSON.stringify({ nombre, codigoEstudiante, platoElegido })
     });
     const data = await res.json();
-
+ 
     if (!data.error) {
       miTurnoRef.current  = data;
       notificadoRef.current = { llamado: false, tres: false, siguiente: false };
     }
-
+ 
     await cargarTurnos();
     return data;
   }
-
+ 
   async function actualizarEstado(id, status) {
     await fetch(`${API}/orders/${id}`, {
       method: 'PATCH',
@@ -91,7 +98,7 @@ export function AppProvider({ children }) {
     });
     await cargarTurnos();
   }
-
+ 
   async function loginAdmin(password) {
     const res = await fetch(`${API}/admin/login`, {
       method: 'POST',
@@ -102,9 +109,9 @@ export function AppProvider({ children }) {
     if (data.ok) setIsAdmin(true);
     return data.ok;
   }
-
+ 
   function logoutAdmin() { setIsAdmin(false); }
-
+ 
   return (
     <AppContext.Provider value={{
       turnos,
@@ -119,7 +126,7 @@ export function AppProvider({ children }) {
     </AppContext.Provider>
   );
 }
-
+ 
 export function useApp() {
   return useContext(AppContext);
 }
